@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://clferibbl1iqv"]
+
+[ext_resource type="Script" uid="uid://bmo1lkl6l8u53" path="res://scripts/Laberinto.gd" id="1_yfu4l"]
+[ext_resource type="PackedScene" uid="uid://d2wud53ca154q" path="res://escenas/juego/Jugador.tscn" id="2_ee7q1"]
+
+[node name="Laberinto" type="Node2D"]
+script = ExtResource("1_yfu4l")
+
+[node name="ContenedorSuelo" type="Node2D" parent="."]
+
+[node name="ContenedorParedes" type="Node2D" parent="."]
+
+[node name="PuntosSpawn" type="Node2D" parent="."]
+
+[node name="ZonasObjetos" type="Node2D" parent="."]
+
+[node name="Jugador" parent="." instance=ExtResource("2_ee7q1")]
+position = Vector2(150, 150)

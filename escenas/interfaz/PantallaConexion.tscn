@@ -1,0 +1,86 @@
+[gd_scene load_steps=4 format=3 uid="uid://d3blrb4kvb70h"]
+
+[ext_resource type="Script" uid="uid://ceesyodcaayfj" path="res://scripts/interfaz/PantallaConexion.gd" id="1_yvtn6"]
+
+[sub_resource type="Theme" id="Theme_yvtn6"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_rvbo6"]
+font_size = 32
+
+[node name="PantallaConexion" type="Control"]
+modulate = Color(1, 0.51, 0.51, 1)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_yvtn6")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.3119, 0.311105, 0.512144, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -48.0
+offset_right = 200.0
+offset_bottom = 252.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EtiquetaTitulo" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "CONEXION"
+
+[node name="HBoxIP" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme = SubResource("Theme_yvtn6")
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxIP"]
+layout_mode = 2
+text = "Conexion"
+label_settings = SubResource("LabelSettings_rvbo6")
+horizontal_alignment = 1
+
+[node name="CampoIP" type="LineEdit" parent="VBoxContainer/HBoxIP"]
+layout_mode = 2
+text = "127.0.0.1"
+placeholder_text = "\"Dirección IP\""
+
+[node name="HBoxPuerto" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxPuerto"]
+layout_mode = 2
+text = "Puerto:"
+
+[node name="CampoPuerto" type="LineEdit" parent="VBoxContainer/HBoxPuerto"]
+layout_mode = 2
+text = "7000"
+placeholder_text = "\"Puerto\""
+
+[node name="BotonConectar" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Conectar"
+
+[node name="EtiquetaEstado" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="BotonVolver" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Volver
+"

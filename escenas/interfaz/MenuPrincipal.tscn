@@ -1,0 +1,72 @@
+[gd_scene load_steps=4 format=3 uid="uid://dbdy0mb4y6aax"]
+
+[ext_resource type="Script" uid="uid://hvd31rav1l6y" path="res://scripts/interfaz/MenuPrincipal.gd" id="1_vqf0y"]
+
+[sub_resource type="SystemFont" id="SystemFont_da8yp"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_c3p8g"]
+font = SubResource("SystemFont_da8yp")
+font_size = 50
+font_color = Color(1, 0.2, 0, 1)
+outline_size = 5
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 6
+shadow_color = Color(0.121569, 0.109804, 0.0980392, 0)
+shadow_offset = Vector2(2, 2)
+
+[node name="MenuPrincipal" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_vqf0y")
+
+[node name="Fondo" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 1151.0
+offset_bottom = 644.0
+color = Color(0.8, 1, 0.741176, 1)
+
+[node name="TituloJuego" type="Label" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 111.0
+offset_right = 1143.0
+offset_bottom = 180.0
+text = "HOME FIGHT"
+label_settings = SubResource("LabelSettings_c3p8g")
+horizontal_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 265.0
+offset_top = 278.0
+offset_right = -252.0
+offset_bottom = -75.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BotonServidor" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Iniciar una partida"
+
+[node name="BotonUnirse" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Unirse a una partida"
+
+[node name="BotonControles" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Controles / Ayuda"
+
+[node name="BotonPersonalizar" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Personalizar"
+
+[node name="BotonSalir" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Salir"

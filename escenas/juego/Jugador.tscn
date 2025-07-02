@@ -1,0 +1,66 @@
+[gd_scene load_steps=6 format=3 uid="uid://d2wud53ca154q"]
+
+[ext_resource type="Script" uid="uid://dasrbfwxr87xq" path="res://scripts/Jugador.gd" id="1_lry30"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_lry30"]
+radius = 24.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bb6hx"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_kpeye"]
+radius = 32.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_bb6hx"]
+font_size = 12
+
+[node name="Jugador" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 64
+script = ExtResource("1_lry30")
+
+[node name="SpriteJugador" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_lry30")
+
+[node name="AreaAtaque" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AreaAtaque"]
+visible = false
+modulate = Color(1, 0, 0, 0.3)
+shape = SubResource("RectangleShape2D_bb6hx")
+
+[node name="IndicadorAlcance" type="Sprite2D" parent="AreaAtaque"]
+
+[node name="DetectorObjetos" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectorObjetos"]
+shape = SubResource("CircleShape2D_kpeye")
+disabled = true
+
+[node name="EtiquetaNombre" type="Label" parent="."]
+offset_left = -31.0
+offset_top = -48.0
+offset_right = 29.0
+offset_bottom = -28.0
+text = "Jugador"
+label_settings = SubResource("LabelSettings_bb6hx")
+horizontal_alignment = 1
+
+[node name="BarraVidaLocal" type="ProgressBar" parent="."]
+offset_left = -25.0
+offset_top = -30.0
+offset_right = 25.0
+offset_bottom = -22.0
+value = 100.0
+show_percentage = false
+
+[node name="EfectosVisuales" type="Node2D" parent="."]
+
+[node name="EfectoAtaque" type="Sprite2D" parent="EfectosVisuales"]
+
+[node name="EfectoRecogida" type="Sprite2D" parent="EfectosVisuales"]

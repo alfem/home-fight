@@ -1,0 +1,87 @@
+[gd_scene load_steps=4 format=3 uid="uid://dywdarha5d37h"]
+
+[ext_resource type="Script" uid="uid://djtbr78cmmpgv" path="res://scripts/Principal.gd" id="1_2j1fg"]
+[ext_resource type="PackedScene" uid="uid://clferibbl1iqv" path="res://escenas/juego/Laberinto.tscn" id="2_2j1fg"]
+[ext_resource type="Script" uid="uid://865gng2b2mxi" path="res://scripts/HUD.gd" id="3_2j1fg"]
+
+[node name="Principal" type="Node2D"]
+script = ExtResource("1_2j1fg")
+
+[node name="Laberinto" parent="." instance=ExtResource("2_2j1fg")]
+
+[node name="ContenedorJugadores" type="Node2D" parent="."]
+
+[node name="Camara2D" type="Camera2D" parent="."]
+offset = Vector2(400, 300)
+zoom = Vector2(0.6, 0.6)
+
+[node name="InterfazUsuario" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="Control" parent="InterfazUsuario"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_2j1fg")
+
+[node name="BarraVida" type="ProgressBar" parent="InterfazUsuario/HUD"]
+custom_minimum_size = Vector2(300, 30)
+layout_mode = 1
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 320.0
+offset_bottom = 50.0
+value = 100.0
+show_percentage = false
+
+[node name="InfoArma" type="Label" parent="InterfazUsuario/HUD"]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 50.0
+offset_right = 137.0
+offset_bottom = 73.0
+text = "Arma: Puños"
+
+[node name="InfoMunicion" type="Label" parent="InterfazUsuario/HUD"]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 70.0
+offset_right = 137.0
+offset_bottom = 93.0
+text = "Municion: 0"
+
+[node name="InfoJugadores" type="VBoxContainer" parent="InterfazUsuario/HUD"]
+custom_minimum_size = Vector2(180, 200)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -1352.0
+offset_top = 20.0
+offset_right = -1172.0
+offset_bottom = 220.0
+grow_horizontal = 0
+
+[node name="PanelDebug" type="Panel" parent="InterfazUsuario/HUD"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 47.0
+offset_top = -116.0
+offset_right = 347.0
+offset_bottom = -56.0
+grow_vertical = 0
+
+[node name="InfoConexion" type="Label" parent="InterfazUsuario/HUD/PanelDebug"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "\"Conectado\""
+horizontal_alignment = 1
