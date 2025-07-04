@@ -221,6 +221,10 @@ func crear_pared(x: int, y: int):
 	forma.size = Vector2(tamano_celda, tamano_celda)
 	colision.shape = forma
 	
+	# CRÍTICO: Configurar capas de colisión correctamente
+	pared.collision_layer = 1     # Está en capa "paredes" (bit 1)
+	pared.collision_mask = 0      # No necesita detectar nada
+	
 	# NO centrar los hijos, centrar el padre
 	colision.position = Vector2.ZERO
 	sprite.position = Vector2.ZERO
@@ -244,36 +248,8 @@ func crear_pared(x: int, y: int):
 	contenedor_paredes.add_child(pared)
 	
 	paredes_instanciadas.append(pared)
-
-func crear_textura_pared(sprite: Sprite2D, x: int, y: int):
-	var imagen = Image.create(tamano_celda, tamano_celda, false, Image.FORMAT_RGBA8)
 	
-	# Determinar tipo de pared según posición
-	var color_pared = determinar_color_pared(x, y)
-	imagen.fill(color_pared)
-	
-	# Añadir borde más oscuro
-	var color_borde = color_pared.darkened(0.3)
-	
-	# Borde superior
-	for i in range(tamano_celda):
-		imagen.set_pixel(i, 0, color_borde)
-		imagen.set_pixel(i, 1, color_borde)
-	
-	# Borde izquierdo
-	for i in range(tamano_celda):
-		imagen.set_pixel(0, i, color_borde)
-		imagen.set_pixel(1, i, color_borde)
-	
-	# Añadir algo de textura aleatoria
-	for i in range(20):
-		var px = randi_range(3, tamano_celda - 4)
-		var py = randi_range(3, tamano_celda - 4)
-		var color_textura = color_pared.lightened(randf_range(-0.1, 0.1))
-		imagen.set_pixel(px, py, color_textura)
-	
-	var textura = ImageTexture.create_from_image(imagen)
-	sprite.texture = textura
+	print("Pared creada en (", x, ",", y, ") con collision_layer=", pared.collision_layer)
 
 func determinar_color_pared(x: int, y: int) -> Color:
 	# Paredes exteriores más oscuras

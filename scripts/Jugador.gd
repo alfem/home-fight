@@ -36,6 +36,12 @@ func _ready():
 	
 	print("Jugador ID: ", id_jugador, " Local: ", es_local, " Unique ID: ", multiplayer.get_unique_id())
 	
+	# CRÍTICO: Configurar colisiones correctamente
+	configurar_colisiones()
+	
+	# Inicializar vida
+	vida_actual = vida_maxima
+	
 	# Configurar colores únicos por jugador
 	configurar_apariencia_inicial()
 	
@@ -45,7 +51,34 @@ func _ready():
 	# Añadir al grupo de jugadores
 	add_to_group("jugadores")
 	
+	# Conectar señal de vida
+	vida_cambiada.connect(_on_vida_cambiada)
+	
 	print("Jugador ", id_jugador, " listo. Local: ", es_local)
+
+func configurar_colisiones():
+	print("Configurando colisiones para jugador ", id_jugador)
+	
+	# JUGADOR PRINCIPAL - debe colisionar con paredes
+	collision_layer = 2   # Está en capa "jugadores" (bit 2)
+	collision_mask = 1    # Colisiona con "paredes" (bit 1)
+	
+	# ÁREA DE ATAQUE - debe detectar otros jugadores
+	if area_ataque:
+		area_ataque.collision_layer = 8   # Está en capa "ataques" (bit 4) 
+		area_ataque.collision_mask = 2    # Detecta "jugadores" (bit 2)
+	
+	# DETECTOR DE OBJETOS - debe detectar objetos recogibles
+	if detector_objetos:
+		detector_objetos.collision_layer = 0   # No está en ninguna capa
+		detector_objetos.collision_mask = 4    # Detecta "objetos" (bit 3)
+	
+	print("Colisiones configuradas:")
+	print("  - Jugador: layer=", collision_layer, " mask=", collision_mask)
+	if area_ataque:
+		print("  - AreaAtaque: layer=", area_ataque.collision_layer, " mask=", area_ataque.collision_mask)
+	if detector_objetos:
+		print("  - DetectorObjetos: layer=", detector_objetos.collision_layer, " mask=", detector_objetos.collision_mask)
 
 func configurar_apariencia_inicial():
 	# Crear sprite con color único por jugador
@@ -61,12 +94,11 @@ func configurar_apariencia_inicial():
 	var sprite = get_node_or_null("SpriteJugador")
 	
 	if sprite.texture:
-			sprite.modulate = color_jugador
-			print("Color aplicado al sprite existente: ", color_jugador)
+		sprite.modulate = color_jugador
+		print("Color aplicado al sprite existente: ", color_jugador)
 	else:
-			# Si no tiene textura, crear una redonda
-			crear_textura_redonda(sprite, color_jugador)
-	
+		# Si no tiene textura, crear una redonda
+		crear_textura_redonda(sprite, color_jugador)
 	
 	print("Jugador ", id_jugador, " configurado con color: ", color_jugador)
 	
@@ -117,12 +149,6 @@ func configurar_efectos():
 	efecto_ataque.visible = false
 	efecto_recogida.visible = false
 
-#func _unhandled_input(event):
-#	if not es_local:
-#		return
-	
-#	print("Input detectado: ", event)
-
 func _physics_process(delta):
 	# SOLO el jugador local procesa input
 	if not es_local:
@@ -139,7 +165,7 @@ func _physics_process(delta):
 	if Input.is_action_pressed("mover_derecha"):
 		direction.x += 1
 	if Input.is_action_just_pressed("atacar"):
-		print("¡Botón de ataque presionado!")
+		print("¡Botón de ataque presionado por jugador ", id_jugador, "!")
 		realizar_ataque()
 		
 	if direction != Vector2.ZERO:
@@ -178,8 +204,14 @@ func actualizar_posicion(nueva_posicion: Vector2):
 	var tween = create_tween()
 	tween.tween_property(self, "position", nueva_posicion, 0.1)
 
-
 func realizar_ataque():
+	print("REALIZANDO ATAQUE - Jugador ", id_jugador, " en posición ", position)
+	
+	# SOLO el jugador local puede atacar
+	if not es_local:
+		print("ERROR: Jugador no local intentando atacar")
+		return
+	
 	# Mostrar indicador de alcance temporalmente
 	mostrar_indicador_ataque()
 	
@@ -187,22 +219,63 @@ func realizar_ataque():
 	if objetivo:
 		var dano = calcular_dano()
 		
-		# Reproducir sonido de ataque
-		if GestorJuego and GestorJuego.has_method("reproducir_sonido_ataque"):
-			GestorJuego.reproducir_sonido_ataque(arma_equipada)
+		print("OBJETIVO ENCONTRADO! Jugador ", id_jugador, " atacando a jugador ", objetivo.id_jugador, " por ", dano, " de daño")
+		
+		# Reproducir sonido de ataque para todos
+		reproducir_sonido_ataque_rpc.rpc(arma_equipada)
 		
 		if es_ataque_a_distancia():
 			if municion_actual > 0:
 				municion_actual -= 1
-				objetivo.recibir_dano.rpc(dano, id_jugador)
+				# Enviar RPC a TODOS los clientes, no solo al objetivo
+				realizar_dano_a_jugador.rpc(objetivo.id_jugador, dano, id_jugador)
 				mostrar_efecto_ataque()
 			else:
 				print("Sin munición!")
 		else:
-			objetivo.recibir_dano.rpc(dano, id_jugador)
+			# Enviar RPC a TODOS los clientes, no solo al objetivo
+			realizar_dano_a_jugador.rpc(objetivo.id_jugador, dano, id_jugador)
 			mostrar_efecto_ataque()
 	else:
-		print("No hay objetivos en rango")
+		print("No hay objetivos en rango para jugador ", id_jugador)
+
+@rpc("call_local")
+func realizar_dano_a_jugador(id_objetivo: int, cantidad: int, id_atacante: int):
+	# Buscar el jugador objetivo por ID
+	var objetivo = encontrar_jugador_por_id(id_objetivo)
+	if objetivo and objetivo.id_jugador == id_objetivo:
+		print("Aplicando ", cantidad, " de daño a jugador ", id_objetivo, " desde atacante ", id_atacante)
+		objetivo.recibir_dano_directo(cantidad, id_atacante)
+	else:
+		print("ERROR: No se encontró jugador objetivo con ID ", id_objetivo)
+
+func encontrar_jugador_por_id(buscar_id: int):
+	# Buscar en ContenedorJugadores
+	var escena_principal = get_tree().current_scene
+	if escena_principal:
+		var contenedor_jugadores = escena_principal.get_node_or_null("ContenedorJugadores")
+		if contenedor_jugadores:
+			for child in contenedor_jugadores.get_children():
+				if child.has_method("get_multiplayer_authority") and child.id_jugador == buscar_id:
+					return child
+	
+	# Fallback: buscar en grupo
+	var jugadores = get_tree().get_nodes_in_group("jugadores")
+	for jugador in jugadores:
+		if jugador.id_jugador == buscar_id:
+			return jugador
+	
+	return null
+
+@rpc("call_local")
+func reproducir_sonido_ataque_rpc(tipo_arma: String):
+	match tipo_arma:
+		"pistola":
+			GestorAudio.reproducir_efecto("disparo_pistola")
+		"rifle":
+			GestorAudio.reproducir_efecto("disparo_rifle")
+		"espada", "hacha":
+			GestorAudio.reproducir_efecto("golpe_espada")
 
 func mostrar_indicador_ataque():
 	indicador_alcance.visible = true
@@ -219,14 +292,77 @@ func mostrar_efecto_ataque():
 	tween.tween_callback(func(): efecto_ataque.visible = false)
 
 func buscar_objetivo_cercano():
-	var jugadores = get_tree().get_nodes_in_group("jugadores")
-	var distancia_ataque = 100.0 if es_ataque_a_distancia() else 60.0
+	print("BUSCANDO OBJETIVO - Jugador ", id_jugador, " buscando desde posición ", position)
 	
-	for jugador in jugadores:
-		if jugador != self and jugador.vida_actual > 0:
-			if position.distance_to(jugador.position) <= distancia_ataque:
-				return jugador
-	return null
+	var distancia_ataque = 100.0 if es_ataque_a_distancia() else 60.0
+	print("Distancia de ataque: ", distancia_ataque)
+	
+	var objetivo_encontrado = null
+	var distancia_minima = distancia_ataque + 1
+	
+	# Método 1: Buscar en el contenedor de jugadores de la escena Principal
+	var escena_principal = get_tree().current_scene
+	if escena_principal:
+		var contenedor_jugadores = escena_principal.get_node_or_null("ContenedorJugadores")
+		if contenedor_jugadores:
+			print("Buscando en ContenedorJugadores...")
+			for child in contenedor_jugadores.get_children():
+				# VERIFICACIÓN CRÍTICA: No atacarse a sí mismo
+				if child != self and child.id_jugador != id_jugador and child.has_method("recibir_dano") and child.vida_actual > 0:
+					var distancia = position.distance_to(child.position)
+					print("  - Jugador ", child.id_jugador, " a distancia ", distancia, " (mi ID: ", id_jugador, ")")
+					if distancia <= distancia_ataque and distancia < distancia_minima:
+						distancia_minima = distancia
+						objetivo_encontrado = child
+						print("    -> NUEVO OBJETIVO MÁS CERCANO")
+	
+	# Método 2: Fallback - buscar en el grupo de jugadores
+	if not objetivo_encontrado:
+		print("Fallback: buscando en grupo 'jugadores'...")
+		var jugadores = get_tree().get_nodes_in_group("jugadores")
+		print("Jugadores en grupo: ", jugadores.size())
+		for jugador in jugadores:
+			# VERIFICACIÓN CRÍTICA: No atacarse a sí mismo
+			if jugador != self and jugador.id_jugador != id_jugador and jugador.has_method("recibir_dano") and jugador.vida_actual > 0:
+				var distancia = position.distance_to(jugador.position)
+				print("  - Jugador ", jugador.id_jugador, " a distancia ", distancia, " (mi ID: ", id_jugador, ")")
+				if distancia <= distancia_ataque and distancia < distancia_minima:
+					distancia_minima = distancia
+					objetivo_encontrado = jugador
+					print("    -> NUEVO OBJETIVO MÁS CERCANO")
+	
+	if objetivo_encontrado:
+		print("OBJETIVO SELECCIONADO: Jugador ", objetivo_encontrado.id_jugador, " a distancia ", distancia_minima)
+		# VERIFICACIÓN FINAL: Asegurar que no es el mismo jugador
+		if objetivo_encontrado.id_jugador == id_jugador:
+			print("ERROR: Se seleccionó a sí mismo como objetivo!")
+			return null
+	else:
+		print("NO SE ENCONTRÓ OBJETIVO")
+	
+	return objetivo_encontrado
+
+func detectar_objetivo_por_area(distancia_max: float):
+	# Método simplificado sin await - usar detección directa por distancia
+	var objetivo = null
+	var distancia_minima = distancia_max + 1
+	
+	# Buscar todos los nodos CharacterBody2D en la escena
+	var todos_los_nodos = get_tree().get_nodes_in_group("jugadores")
+	
+	print("Detectando por área - nodos encontrados: ", todos_los_nodos.size())
+	
+	for nodo in todos_los_nodos:
+		# VERIFICACIÓN CRÍTICA: No atacarse a sí mismo
+		if nodo != self and nodo.id_jugador != id_jugador and nodo.has_method("recibir_dano") and nodo.vida_actual > 0:
+			var distancia = position.distance_to(nodo.position)
+			print("  - Nodo ", nodo.id_jugador, " a distancia ", distancia, " (mi ID: ", id_jugador, ")")
+			if distancia <= distancia_max and distancia < distancia_minima:
+				distancia_minima = distancia
+				objetivo = nodo
+				print("    -> NUEVO OBJETIVO MÁS CERCANO")
+	
+	return objetivo
 
 func es_ataque_a_distancia() -> bool:
 	return arma_equipada in ["pistola", "rifle"]
@@ -243,36 +379,59 @@ func calcular_dano() -> int:
 	return int(dano_base * multiplicador)
 
 @rpc("call_local")
-func recibir_dano(cantidad: int, atacante_id: int):
+func recibir_dano_directo(cantidad: int, atacante_id: int):
+	print("RECIBIENDO DAÑO DIRECTO - Jugador ", id_jugador, " recibe ", cantidad, " de daño de jugador ", atacante_id)
+	
+	# Verificar que no nos estamos atacando a nosotros mismos
+	if atacante_id == id_jugador:
+		print("ERROR: Jugador ", id_jugador, " intentando atacarse a sí mismo!")
+		return
+	
 	if tiene_escudo and randf() < 0.3:  # 30% de bloqueo con escudo
 		print("¡Ataque bloqueado por ", nombre_jugador, "!")
+		mostrar_efecto_bloqueo.rpc()
 		return
 	
 	vida_actual -= cantidad
 	vida_cambiada.emit(vida_actual)
 	
 	# Efecto visual de daño
-	mostrar_efecto_dano()
+	mostrar_efecto_dano.rpc()
 	
 	print(nombre_jugador, " recibió ", cantidad, " de daño. Vida restante: ", vida_actual)
 	
 	if vida_actual <= 0:
 		morir()
 
+@rpc("call_local")
+func recibir_dano(cantidad: int, atacante_id: int):
+	# Mantener función antigua para compatibilidad, pero redirigir a la nueva
+	recibir_dano_directo(cantidad, atacante_id)
+
+@rpc("call_local")
 func mostrar_efecto_dano():
 	# Efecto de parpadeo rojo al recibir daño
 	var tween = create_tween()
 	tween.tween_property(sprite_jugador, "modulate", Color.RED, 0.1)
 	tween.tween_property(sprite_jugador, "modulate", Color.WHITE, 0.1)
 
+@rpc("call_local")
+func mostrar_efecto_bloqueo():
+	# Efecto visual de bloqueo
+	var tween = create_tween()
+	tween.tween_property(sprite_jugador, "modulate", Color.CYAN, 0.1)
+	tween.tween_property(sprite_jugador, "modulate", Color.WHITE, 0.1)
+
 func morir():
 	print(nombre_jugador, " ha muerto!")
 	jugador_muerto.emit()
 	
+	# Notificar inmediatamente al GestorJuego - sin complicaciones de red
 	if GestorJuego and GestorJuego.has_method("notificar_muerte_jugador"):
+		print("Notificando muerte al GestorJuego - ID: ", id_jugador)
 		GestorJuego.notificar_muerte_jugador(id_jugador)
 	
-	# Efectos visuales de muerte
+	# Efectos visuales de muerte (para todos)
 	sprite_jugador.modulate = Color(0.5, 0.5, 0.5, 0.7)  # Gris semitransparente
 	etiqueta_nombre.text = nombre_jugador + " (Muerto)"
 	
@@ -323,8 +482,6 @@ func curar(cantidad: int):
 	var vida_curada = vida_actual - vida_anterior
 	vida_cambiada.emit(vida_actual)
 	print(nombre_jugador, " se curó ", vida_curada, " puntos. Vida actual: ", vida_actual)
-
-
 
 func actualizar_sprite_arma():
 	var sprite = get_node_or_null("SpriteJugador")
@@ -399,7 +556,6 @@ func establecer_foto_cara(textura: Texture2D):
 
 func establecer_nombre(nuevo_nombre: String):
 	nombre_jugador = nuevo_nombre
-#TO-DO	etiqueta_nombre.text = nombre_jugador
 
 func _on_vida_cambiada(nueva_vida: int):
 	# Actualizar barra de vida local

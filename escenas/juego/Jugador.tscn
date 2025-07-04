@@ -15,7 +15,6 @@ font_size = 12
 
 [node name="Jugador" type="CharacterBody2D"]
 collision_layer = 2
-collision_mask = 64
 script = ExtResource("1_lry30")
 
 [node name="SpriteJugador" type="Sprite2D" parent="."]
@@ -24,7 +23,7 @@ script = ExtResource("1_lry30")
 shape = SubResource("CircleShape2D_lry30")
 
 [node name="AreaAtaque" type="Area2D" parent="."]
-collision_layer = 0
+collision_layer = 128
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AreaAtaque"]
