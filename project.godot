@@ -55,6 +55,13 @@ atacar={
 ]
 }
 
+[layer_names]
+
+2d_render/layer_1="paredes"
+2d_render/layer_2="jugadores"
+2d_render/layer_3="objetos"
+2d_render/layer_4="ataques"
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
