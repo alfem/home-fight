@@ -9,129 +9,92 @@ var id_ganador: int = -1
 var estadisticas_jugadores = {}
 
 func _ready():
-	# Conectar botones
-	boton_jugar_otra_vez.pressed.connect(_on_boton_jugar_otra_vez_pressed)
-	boton_menu_principal.pressed.connect(_on_boton_menu_principal_pressed)
+	print("PantallaResultados _ready()")
 	
-	# Agregar efectos de sonido a botones
-	configurar_sonidos_botones()
+	# Verificar que los nodos existen
+	if not etiqueta_resultado:
+		print("ERROR: etiqueta_resultado no encontrada")
+	if not lista_jugadores:
+		print("ERROR: lista_jugadores no encontrada")
+	
+	if boton_jugar_otra_vez:
+		boton_jugar_otra_vez.pressed.connect(_on_boton_jugar_otra_vez_pressed)
+	if boton_menu_principal:
+		boton_menu_principal.pressed.connect(_on_boton_menu_principal_pressed)
 	
 	# Detener música del juego y reproducir música de menú
 	if GestorAudio:
 		GestorAudio.reproducir_musica("menu")
-	
-	# Si ya tenemos datos, mostrar resultados inmediatamente
-	if id_ganador != -1 or estadisticas_jugadores.size() > 0:
-		mostrar_resultados()
-
-func configurar_sonidos_botones():
-	var botones = [boton_jugar_otra_vez, boton_menu_principal]
-	for boton in botones:
-		boton.pressed.connect(_on_boton_click, CONNECT_DEFERRED)
-
-func _on_boton_click():
-	if GestorAudio:
-		GestorAudio.reproducir_efecto("click_boton")
 
 func configurar_resultados(ganador: int, estadisticas: Dictionary):
+	print("=== CONFIGURAR RESULTADOS ===")
+	print("Ganador recibido: ", ganador)
+	print("Mi ID: ", multiplayer.get_unique_id())
+	print("Estadísticas recibidas: ", estadisticas)
+	
 	id_ganador = ganador
 	estadisticas_jugadores = estadisticas
-	call_deferred("mostrar_resultados")
+	
+	print("id_ganador asignado: ", id_ganador)
+	print("Comparación: id_ganador == mi_id: ", id_ganador == multiplayer.get_unique_id())
+	
+	# Esperar un frame para asegurar que todos los nodos están listos
+	await get_tree().process_frame
+	
+	# Llamar a mostrar_resultados DESPUÉS de configurar los datos
+	mostrar_resultados()
 
 func mostrar_resultados():
+	print("=== MOSTRAR RESULTADOS ===")
+	print("id_ganador: ", id_ganador)
+	print("Mi unique_id: ", multiplayer.get_unique_id())
+	print("Comparación directa: ", id_ganador == multiplayer.get_unique_id())
+	
+	# Verificar que tenemos los nodos necesarios
+	if not etiqueta_resultado:
+		print("ERROR: No se puede mostrar resultado, etiqueta_resultado es null")
+		return
+		
+	if id_ganador == -1:
+		etiqueta_resultado.text = "¡EMPATE!"
+		etiqueta_resultado.modulate = Color.YELLOW
+		print("Mostrando: EMPATE")
+	elif id_ganador == multiplayer.get_unique_id():
+		etiqueta_resultado.text = "¡VICTORIA!"
+		etiqueta_resultado.modulate = Color.GREEN
+		print("Mostrando: VICTORIA")
+	else:
+		etiqueta_resultado.text = "DERROTA"
+		etiqueta_resultado.modulate = Color.RED
+		print("Mostrando: DERROTA")
+	
+	# Verificar que lista_jugadores existe antes de usarla
+	if not lista_jugadores:
+		print("ERROR CRÍTICO: No se puede encontrar ListaJugadores")
+		return
+	
 	# Limpiar lista actual
 	for child in lista_jugadores.get_children():
 		child.queue_free()
 	
-	# Configurar título principal
-	configurar_titulo_resultado()
-	
 	# Mostrar estadísticas de todos los jugadores
-	mostrar_estadisticas_jugadores()
-
-func configurar_titulo_resultado():
-	if id_ganador == -1:
-		etiqueta_resultado.text = "¡EMPATE!"
-		etiqueta_resultado.modulate = Color.YELLOW
-	elif id_ganador == multiplayer.get_unique_id():
-		etiqueta_resultado.text = "¡VICTORIA!"
-		etiqueta_resultado.modulate = Color.GREEN
-		# Efecto de parpadeo para victoria
-		crear_efecto_victoria()
-	else:
-		etiqueta_resultado.text = "DERROTA"
-		etiqueta_resultado.modulate = Color.RED
-
-func crear_efecto_victoria():
-	var tween = create_tween()
-	tween.set_loops()
-	tween.tween_property(etiqueta_resultado, "scale", Vector2(1.1, 1.1), 0.5)
-	tween.tween_property(etiqueta_resultado, "scale", Vector2(1.0, 1.0), 0.5)
-
-func mostrar_estadisticas_jugadores():
-	# Ordenar jugadores: ganador primero, luego por ID
-	var jugadores_ordenados = estadisticas_jugadores.keys()
-	jugadores_ordenados.sort()
-	
-	# Mover ganador al principio
-	if id_ganador in jugadores_ordenados:
-		jugadores_ordenados.erase(id_ganador)
-		jugadores_ordenados.push_front(id_ganador)
-	
-	for id_jugador in jugadores_ordenados:
-		crear_info_jugador(id_jugador)
-
-func crear_info_jugador(id_jugador: int):
-	var contenedor_jugador = HBoxContainer.new()
-	
-	# Información básica del jugador
-	var info_principal = Label.new()
-	var nombre_jugador = "Jugador " + str(id_jugador)
-	
-	if id_jugador == multiplayer.get_unique_id():
-		nombre_jugador += " (Tú)"
-	
-	var estado = "Eliminado"
-	var color_estado = Color.GRAY
-	
-	if id_jugador == id_ganador:
-		estado = "¡GANADOR!"
-		color_estado = Color.GOLD
-	
-	info_principal.text = nombre_jugador + " - " + estado
-	info_principal.modulate = color_estado
-	info_principal.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	
-	# Estadísticas adicionales
-	var info_stats = Label.new()
-	if id_jugador in estadisticas_jugadores:
+	for id_jugador in estadisticas_jugadores:
 		var stats = estadisticas_jugadores[id_jugador]
-		var eliminaciones = stats.get("eliminaciones", 0)
-		var objetos = stats.get("objetos_recogidos", 0)
-		info_stats.text = "Eliminaciones: %d | Objetos: %d" % [eliminaciones, objetos]
-	else:
-		info_stats.text = "Sin estadísticas"
-	
-	info_stats.modulate = Color.LIGHT_GRAY
-	info_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	
-	# Ensamblar contenedor
-	contenedor_jugador.add_child(info_principal)
-	contenedor_jugador.add_child(info_stats)
-	lista_jugadores.add_child(contenedor_jugador)
-	
-	# Separador visual
-	if id_jugador != estadisticas_jugadores.keys()[-1]:  # No añadir separador al último
-		var separador = HSeparator.new()
-		separador.custom_minimum_size = Vector2(0, 10)
-		lista_jugadores.add_child(separador)
+		var info_jugador = Label.new()
+		
+		var texto_estado = "Eliminado"
+		if id_jugador == id_ganador:
+			texto_estado = "¡GANADOR!"
+		
+		info_jugador.text = "Jugador %d: %s" % [id_jugador, texto_estado]
+		if id_jugador == id_ganador:
+			info_jugador.modulate = Color.GOLD
+		
+		lista_jugadores.add_child(info_jugador)
 
 func _on_boton_jugar_otra_vez_pressed():
-	print("Solicitando reinicio de partida...")
-	
-	# Deshabilitar botón para evitar múltiples clicks
-	boton_jugar_otra_vez.disabled = true
-	boton_jugar_otra_vez.text = "Reiniciando..."
+	if GestorAudio:
+		GestorAudio.reproducir_efecto("click_boton")
 	
 	# Reiniciar el juego
 	if multiplayer.is_server():
@@ -144,15 +107,11 @@ func _on_boton_jugar_otra_vez_pressed():
 			GestorJuego.solicitar_reinicio.rpc_id(1)
 
 func _on_boton_menu_principal_pressed():
-	print("Regresando al menú principal...")
-	
-	# Limpiar estado del juego
-	if GestorJuego:
-		GestorJuego.limpiar_estado()
+	if GestorAudio:
+		GestorAudio.reproducir_efecto("click_boton")
 	
 	# Desconectar del multijugador
-	if multiplayer.multiplayer_peer:
-		multiplayer.multiplayer_peer = null
+	multiplayer.multiplayer_peer = null
 	
 	# Volver al menú principal
 	get_tree().change_scene_to_file("res://escenas/interfaz/MenuPrincipal.tscn")

@@ -22,6 +22,10 @@ GestorRed="*res://scripts/autoloads/GestorRed.gd"
 GestorAudio="*res://scripts/autoloads/GestorAudio.gd"
 GlobalData="*res://scripts/autoloads/GlobalData.gd"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
+
 [input]
 
 mover_arriba={

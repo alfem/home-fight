@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3 uid="uid://cfvn8spf71qwg"]
+
+[ext_resource type="Script" uid="uid://bv6ph4t1jpjp0" path="res://scripts/interfaz/PantallaPersonalizacion.gd" id="1_qkiwh"]
+
+[node name="PantallaPersonalizacion" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_qkiwh")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+
+[node name="HBoxNombre" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="CampoNombre" type="LineEdit" parent="VBoxContainer/HBoxNombre"]
+layout_mode = 2
+
+[node name="BotonCargarFoto" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Cargar Foto"
+
+[node name="VistaPreviaFoto" type="TextureRect" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="BotonGuardar" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Guardar"
+
+[node name="BotonVolver" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Volver"

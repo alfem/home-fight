@@ -249,7 +249,7 @@ func crear_pared(x: int, y: int):
 	
 	paredes_instanciadas.append(pared)
 	
-	print("Pared creada en (", x, ",", y, ") con collision_layer=", pared.collision_layer)
+	#print("Pared creada en (", x, ",", y, ") con collision_layer=", pared.collision_layer)
 
 func determinar_color_pared(x: int, y: int) -> Color:
 	# Paredes exteriores más oscuras

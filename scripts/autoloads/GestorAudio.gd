@@ -27,7 +27,7 @@ func cargar_recursos_audio():
 	#efectos_sonido["disparo_rifle"] = preload("res://recursos/sonidos/efectos/disparo_rifle.ogg")
 	efectos_sonido["golpe_espada"] = preload("res://recursos/sonidos/efectos/golpe_espada.ogg")
 	efectos_sonido["recoger_objeto"] = preload("res://recursos/sonidos/efectos/recoger_objeto.ogg")
-	#efectos_sonido["muerte_jugador"] = preload("res://recursos/sonidos/efectos/muerte_jugador.ogg")
+	efectos_sonido["muerte_jugador"] = preload("res://recursos/sonidos/efectos/muerte_jugador.ogg")
 	efectos_sonido["click_boton"] = preload("res://recursos/sonidos/efectos/click_boton.ogg")
 	
 	print("Sistema de audio inicializado")
